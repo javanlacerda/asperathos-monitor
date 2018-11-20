@@ -33,9 +33,3 @@ class MockRedis():
 
         except Exception as e:
             print e
-
-
-
-
-
-

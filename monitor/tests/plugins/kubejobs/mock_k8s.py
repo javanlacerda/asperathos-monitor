@@ -26,7 +26,7 @@ class Status():
         self.active = active
 
 class MockKube():
-    
+
     def __init__(self, app_id, replicas=1, namespace="default"):
         
         self.jobs = {namespace: {app_id: replicas}}
@@ -35,10 +35,3 @@ class MockKube():
 
         out = Job(self.jobs[namespace][name])
         return out
-
-
-        
-
-
-
-

@@ -40,7 +40,6 @@ class KubeJobProgress(Plugin):
         self.enable_monasca = info_plugin['graphic_metrics']
         if self.enable_monasca:
             self.monasca = MonascaConnector()
-
         self.submission_url = info_plugin['count_jobs_url']
         self.expected_time = int(info_plugin['expected_time'])
         self.number_of_jobs = int(info_plugin['number_of_jobs'])
@@ -53,7 +52,6 @@ class KubeJobProgress(Plugin):
         self.metric_queue = "%s:metrics" % self.app_id
         self.current_job_id = 0
         self.b_v1 = kubernetes.client.BatchV1Api()
-
 
     def _publish_measurement(self, jobs_completed):
 
