@@ -140,6 +140,7 @@ class KubeJobProgress(Plugin):
                                                                           
             job_progress = self.number_of_jobs - (int(job_request.json()) + int(job_processing.json()))
             self._publish_measurement(jobs_completed=job_progress)
+            return job_progress
 
         except Exception as ex:
             print ("Error: No application found for %s. %s remaining attempts"

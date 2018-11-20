@@ -15,9 +15,12 @@
 
 import mock
 import unittest
+import requests_mock
+
 from mock_redis import MockRedis
 from mock_k8s import MockKube
 from datetime import datetime
+
 
 from monitor.plugins.kubejobs.plugin import KubeJobProgress
 
@@ -31,8 +34,8 @@ class TestKubeJobs(unittest.TestCase):
             "monitor_plugin": "kubejobs",
             "graphic_metrics": False,
             "expected_time": 500,
-            "count_jobs_url": "http://mock.com",
-            "number_of_jobs": 1000,
+            "count_jobs_url": "mock.com",
+            "number_of_jobs": 1500,
             "submission_time": "2017-04-11T00:00:00.0003GMT",
             "redis_ip": "192.168.0.0",
             "redis_port": 5000
@@ -75,8 +78,6 @@ class TestKubeJobs(unittest.TestCase):
         plugin.b_v1 = MockKube(plugin.app_id, 3)
         self.assertEqual(plugin._get_num_replicas(), 3)
 
-
-
     def test_publish_measurement(self):
 
         plugin = KubeJobProgress(self.app_id, self.info_plugin,
@@ -102,6 +103,23 @@ class TestKubeJobs(unittest.TestCase):
         elapsed_time = datetime_now - plugin.submission_time
                         
         self.assertEqual(elapsed_time.seconds, plugin._get_elapsed_time())
+
+    def test_monitoring_application(self):
+        
+        plugin = KubeJobProgress(self.app_id, self.info_plugin,
+                                 self.collect_period, self.retries)
+        plugin.rds = MockRedis()
+        plugin.b_v1 = MockKube(plugin.app_id)
+
+        with requests_mock.Mocker() as m:
+
+            m.get('http://%s/redis-%s/job/count' % (plugin.submission_url,
+                                             plugin.app_id), text='500')
+
+            m.get('http://%s/redis-%s/job:processing/count' % (plugin.submission_url,
+                                             plugin.app_id), text='750')
+
+            self.assertEqual(plugin.monitoring_application(), 250)
 
 if __name__ == "__main__":
     unittest.main()
