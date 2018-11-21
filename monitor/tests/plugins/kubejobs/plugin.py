@@ -19,6 +19,7 @@ import requests_mock
 
 from mock_redis import MockRedis
 from mock_k8s import MockKube
+from mock_monasca import MockMonascaConnector
 from datetime import datetime
 
 
@@ -120,6 +121,31 @@ class TestKubeJobs(unittest.TestCase):
                                              plugin.app_id), text='750')
 
             self.assertEqual(plugin.monitoring_application(), 250)
+
+    def test_send_monasca_metrics(self):
+
+        plugin = KubeJobProgress(self.app_id, self.info_plugin,
+                                 self.collect_period, self.retries)
+
+        plugin.rds = MockRedis()
+        plugin.b_v1 = MockKube(plugin.app_id)
+        plugin.monasca = MockMonascaConnector()
+        plugin.enable_monasca = True
+
+        plugin._publish_measurement(5000)
+
+        self.assertEqual(len(plugin.monasca.metrics['time-progress']), 1)
+        self.assertEqual(len(plugin.monasca.metrics['job-progress']), 1)
+        self.assertEqual(len(plugin.monasca.metrics['application-progress.error']), 1)
+        self.assertEqual(len(plugin.monasca.metrics['job-parallelism']), 1)
+
+        plugin._publish_measurement(1000)
+
+        self.assertEqual(len(plugin.monasca.metrics['time-progress']), 2)
+        self.assertEqual(len(plugin.monasca.metrics['job-progress']), 2)
+        self.assertEqual(len(plugin.monasca.metrics['application-progress.error']), 2)
+        self.assertEqual(len(plugin.monasca.metrics['job-parallelism']), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
