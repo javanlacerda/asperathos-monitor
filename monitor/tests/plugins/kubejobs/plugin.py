@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
 import unittest
 import requests_mock
 
@@ -28,6 +27,9 @@ from monitor.plugins.kubejobs.plugin import KubeJobProgress
 
 class TestKubeJobs(unittest.TestCase):
 
+    """
+    Set up variables that KubeJobs plugin needs
+    """    
     def setUp(self):
 
         self.app_id = "kj-10111213"
@@ -48,6 +50,10 @@ class TestKubeJobs(unittest.TestCase):
     def tearDown(self):
         pass
 
+    """
+    Test the KubeJobs Plugin constructor, checking if the
+    plugin's attributes are equals that atributes given
+    """
     def test_init_kubejobs(self):
 
         plugin = KubeJobProgress(self.app_id, self.info_plugin,
@@ -67,7 +73,11 @@ class TestKubeJobs(unittest.TestCase):
 
         self.assertFalse(plugin == plugin2)
 
-        
+
+    """
+    Verify that the number of replicas returned are equal
+    that number of replicas initial
+    """    
     def test_get_num_replicas(self):
 
         plugin = KubeJobProgress(self.app_id, self.info_plugin,
@@ -79,6 +89,10 @@ class TestKubeJobs(unittest.TestCase):
         plugin.b_v1 = MockKube(plugin.app_id, 3)
         self.assertEqual(plugin._get_num_replicas(), 3)
 
+    """
+    Verify that when a measurement is pubished, the
+    metrics are delivered to Redis queue
+    """
     def test_publish_measurement(self):
 
         plugin = KubeJobProgress(self.app_id, self.info_plugin,
@@ -95,6 +109,10 @@ class TestKubeJobs(unittest.TestCase):
         self.assertTrue(plugin.rds.rpop(plugin.metric_queue) != None)
         self.assertTrue(plugin.rds.rpop(plugin.metric_queue) == None)
 
+    """
+    Check that the elapsed time returned (in seconds) 
+    is equal that elapsed time given
+    """
     def test_get_elapsed_time(self):
 
         plugin = KubeJobProgress(self.app_id, self.info_plugin,
@@ -105,6 +123,11 @@ class TestKubeJobs(unittest.TestCase):
                         
         self.assertEqual(elapsed_time.seconds, plugin._get_elapsed_time())
 
+    """
+    Check that the function monitoring_application 
+    returns the number of jobs minus the number of
+    jobs that are be processing plus number of jobs to do 
+    """
     def test_monitoring_application(self):
         
         plugin = KubeJobProgress(self.app_id, self.info_plugin,
@@ -122,6 +145,10 @@ class TestKubeJobs(unittest.TestCase):
 
             self.assertEqual(plugin.monitoring_application(), 250)
 
+    """
+    Verify that when the flag enable_monasca is True,
+    the metrics are delivered to Monasca
+    """
     def test_send_monasca_metrics(self):
 
         plugin = KubeJobProgress(self.app_id, self.info_plugin,
