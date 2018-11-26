@@ -16,9 +16,9 @@
 import unittest
 import requests_mock
 
-from mock_redis import MockRedis
-from mock_k8s import MockKube
-from mock_monasca import MockMonascaConnector
+from monitor.tests.mocks.mock_redis import MockRedis
+from monitor.tests.mocks.mock_k8s import MockKube
+from monitor.tests.mocks.mock_monasca import MockMonascaConnector
 from datetime import datetime
 
 
