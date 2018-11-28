@@ -46,7 +46,7 @@ $ tox -e venv -- monitor
 ### Run Unit Tests
  In order to execute a unit test of a specific class run the following command:
  ```
-$ pytest broker/test/unit/path/to/test/test_class.py
+$ pytest monitor/test/plugins/kubejobs/test_class.py
 ```
  Or run all test cases using tox command:
  ```
