@@ -21,7 +21,9 @@ from subprocess import PIPE
 
 from datetime import datetime
 from monitor.utils.monasca.connector import MonascaConnector
+from monitor.utils.influxdb.connector import InfluxConnector
 from monitor.plugins.base import Plugin
+from influxdb import InfluxDBClient
 
 import kubernetes
 
@@ -35,10 +37,9 @@ class KubeJobProgress(Plugin):
     def __init__(self, app_id, info_plugin, collect_period=2, retries=10):
         Plugin.__init__(self, app_id, info_plugin,
                         collect_period, retries=retries)
+        kubernetes.config.load_kube_config()
 
-        self.enable_monasca = info_plugin['graphic_metrics']
-        if self.enable_monasca:
-            self.monasca = MonascaConnector()
+        self.enable_visualizer = info_plugin['enable_visualizer']
         self.submission_url = info_plugin['count_jobs_url']
         self.expected_time = int(info_plugin['expected_time'])
         self.number_of_jobs = int(info_plugin['number_of_jobs'])
@@ -50,6 +51,20 @@ class KubeJobProgress(Plugin):
                                      port=info_plugin['redis_port'])
         self.metric_queue = "%s:metrics" % self.app_id
         self.current_job_id = 0
+        self.b_v1 = kubernetes.client.BatchV1Api()
+        if self.enable_visualizer:
+            datasource_type = info_plugin['datasource_type']
+            if datasource_type == "monasca":
+                self.datasource = MonascaConnector()
+            
+            elif datasource_type == "influxdb":
+                influx_url = info_plugin['database_data']['url']
+                influx_port = info_plugin['database_data']['port']
+                database_name = info_plugin['database_data']['name']
+                self.datasource = InfluxConnector(influx_url, influx_port, database_name)
+            else:
+                print("Unknown datasource type...!")
+        
 
     def _publish_measurement(self, jobs_completed):
 
@@ -89,10 +104,12 @@ class KubeJobProgress(Plugin):
         application_progress_error['timestamp'] = time.time() * 1000
         application_progress_error['dimensions'] = self.dimensions
 
+        job_progress_error['name'] = 'job-progress'
         job_progress_error['value'] = job_progress
         job_progress_error['timestamp'] = time.time() * 1000
         job_progress_error['dimensions'] = self.dimensions
 
+        time_progress_error['name'] = 'time-progress'
         time_progress_error['value'] = ref_value
         time_progress_error['timestamp'] = time.time() * 1000
         time_progress_error['dimensions'] = self.dimensions
@@ -106,23 +123,19 @@ class KubeJobProgress(Plugin):
         print "Error: %s " % application_progress_error['value']
 
         self.rds.rpush(self.metric_queue,
-                       application_progress_error)
+                       str(application_progress_error))
 
-        if self.enable_monasca:
-            self.monasca.send_metrics([application_progress_error])
-            self.monasca.send_metrics([job_progress_error])
-            self.monasca.send_metrics([time_progress_error])
-            self.monasca.send_metrics([parallelism])
-
-
+        if self.enable_visualizer:
+            self.datasource.send_metrics([application_progress_error])
+            self.datasource.send_metrics([job_progress_error])
+            self.datasource.send_metrics([time_progress_error])
+            self.datasource.send_metrics([parallelism])
+            
         time.sleep(MONITORING_INTERVAL)
 
     def _get_num_replicas(self):
-        kubernetes.config.load_kube_config()
-
-        b_v1 = kubernetes.client.BatchV1Api()
-
-        job = b_v1.read_namespaced_job(name = self.app_id, namespace="default")
+        
+        job = self.b_v1.read_namespaced_job(name = self.app_id, namespace="default")
         return job.status.active
 
     def _get_elapsed_time(self):
@@ -140,6 +153,7 @@ class KubeJobProgress(Plugin):
                                                                           self.app_id))
             job_progress = self.number_of_jobs - (int(job_request.json()) + int(job_processing.json()))
             self._publish_measurement(jobs_completed=job_progress)
+            return job_progress
 
         except Exception as ex:
             print ("Error: No application found for %s. %s remaining attempts"
