@@ -13,36 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-<<<<<<< HEAD
-
-class MockMonascaConnector():
-
-=======
 """
-Class that define a MonascaConnector simulation.
+Class that define a InfluxConnector simulation.
 """
-class MockMonascaConnector():
+class MockInfluxConnector():
 
-    """ Constructor of the mock of a MonascaConnector object
+    """ Constructor of the mock of a InfluxConnector object
     
     Returns:
         MockRedis: The simulation of a redis object
     """
->>>>>>> 810505bf1927d7a55e397a6ce0ce8addca52d13b
     def __init__(self):
 
         self.metrics = {}
 
-<<<<<<< HEAD
-    
-=======
     """
     Simulate the behavior of send_metrics function
-    Monasca Connector api.
+    Influx Connector api.
     Args:
-        metrics(Objects): Object that must be send to monasca.
+        metrics(Objects): Object that must be send to influx.
     """
->>>>>>> 810505bf1927d7a55e397a6ce0ce8addca52d13b
     def send_metrics(self, metrics):
 
         try:
