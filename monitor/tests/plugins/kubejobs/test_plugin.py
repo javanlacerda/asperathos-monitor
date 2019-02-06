@@ -19,6 +19,8 @@ import requests_mock
 from monitor.tests.mocks.mock_redis import MockRedis
 from monitor.tests.mocks.mock_k8s import MockKube
 from monitor.tests.mocks.mock_monasca import MockMonascaConnector
+from monitor.tests.mocks.mock_influx import MockInfluxConnector
+
 from datetime import datetime
 
 
@@ -41,7 +43,9 @@ class TestKubeJobs(unittest.TestCase):
             "number_of_jobs": 1500,
             "submission_time": "2017-04-11T00:00:00.0003GMT",
             "redis_ip": "192.168.0.0",
-            "redis_port": 5000
+            "redis_port": 5000,
+            "enable_visualizer": True,
+            "datasource_type": "influxfb"
         }
 
         self.collect_period = 5
@@ -100,6 +104,7 @@ class TestKubeJobs(unittest.TestCase):
 
         plugin.rds = MockRedis()
         plugin.b_v1 = MockKube(plugin.app_id)
+        plugin.datasource = MockInfluxConnector()
 
         plugin._publish_measurement(500)
         self.assertTrue(plugin.rds.rpop(plugin.metric_queue) != None)
@@ -134,6 +139,7 @@ class TestKubeJobs(unittest.TestCase):
                                  self.collect_period, self.retries)
         plugin.rds = MockRedis()
         plugin.b_v1 = MockKube(plugin.app_id)
+        plugin.datasource = MockInfluxConnector()
 
         with requests_mock.Mocker() as m:
 
@@ -156,22 +162,21 @@ class TestKubeJobs(unittest.TestCase):
 
         plugin.rds = MockRedis()
         plugin.b_v1 = MockKube(plugin.app_id)
-        plugin.monasca = MockMonascaConnector()
-        plugin.enable_monasca = True
+        plugin.datasource = MockMonascaConnector()
 
         plugin._publish_measurement(5000)
 
-        self.assertEqual(len(plugin.monasca.metrics['time-progress']), 1)
-        self.assertEqual(len(plugin.monasca.metrics['job-progress']), 1)
-        self.assertEqual(len(plugin.monasca.metrics['application-progress.error']), 1)
-        self.assertEqual(len(plugin.monasca.metrics['job-parallelism']), 1)
+        self.assertEqual(len(plugin.datasource.metrics['time-progress']), 1)
+        self.assertEqual(len(plugin.datasource.metrics['job-progress']), 1)
+        self.assertEqual(len(plugin.datasource.metrics['application-progress.error']), 1)
+        self.assertEqual(len(plugin.datasource.metrics['job-parallelism']), 1)
 
         plugin._publish_measurement(1000)
 
-        self.assertEqual(len(plugin.monasca.metrics['time-progress']), 2)
-        self.assertEqual(len(plugin.monasca.metrics['job-progress']), 2)
-        self.assertEqual(len(plugin.monasca.metrics['application-progress.error']), 2)
-        self.assertEqual(len(plugin.monasca.metrics['job-parallelism']), 2)
+        self.assertEqual(len(plugin.datasource.metrics['time-progress']), 2)
+        self.assertEqual(len(plugin.datasource.metrics['job-progress']), 2)
+        self.assertEqual(len(plugin.datasource.metrics['application-progress.error']), 2)
+        self.assertEqual(len(plugin.datasource.metrics['job-parallelism']), 2)
 
 
 if __name__ == "__main__":
