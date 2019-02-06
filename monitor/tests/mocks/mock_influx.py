@@ -14,11 +14,11 @@
 # limitations under the License.
 
 """
-Class that define a MonascaConnector simulation.
+Class that define a InfluxConnector simulation.
 """
-class MockMonascaConnector():
+class MockInfluxConnector():
 
-    """ Constructor of the mock of a MonascaConnector object
+    """ Constructor of the mock of a InfluxConnector object
     
     Returns:
         MockRedis: The simulation of a redis object
@@ -29,9 +29,9 @@ class MockMonascaConnector():
 
     """
     Simulate the behavior of send_metrics function
-    Monasca Connector api.
+    Influx Connector api.
     Args:
-        metrics(Objects): Object that must be send to monasca.
+        metrics(Objects): Object that must be send to influx.
     """
     def send_metrics(self, metrics):
 
