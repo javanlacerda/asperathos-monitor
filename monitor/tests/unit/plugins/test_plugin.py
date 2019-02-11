@@ -201,6 +201,7 @@ class TestKubeJobs(unittest.TestCase):
         self.assertEqual(len(plugin.datasource.metrics['job-progress']), 2)
         self.assertEqual(len(plugin.datasource.metrics['application-progress.error']), 2)
         self.assertEqual(len(plugin.datasource.metrics['job-parallelism']), 2)
+        self.assertEqual(True, True)
         self.assertEqual(True, False)
 
 if __name__ == "__main__":
