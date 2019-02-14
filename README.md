@@ -1,7 +1,6 @@
 # Asperathos - Monitor
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## Overview
 The **Monitor** is responsible for gather, calculate and publish metrics collected from applications (e.g.: application progress) or environment resources (e.g.: CPU usage).
 The Asperathos Controller and Rebalancer services can use these metrics to take decisions to meet some QoS requirements, but the Monitor is not dependent of these other approaches.
 It is possible, for example, to develop a plugin that only capture metrics from the usage of some VM resource to ease its visualization for Ops teams.
